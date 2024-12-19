@@ -1,0 +1,33 @@
+name: Publish Terraform Module
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  publish:
+    name: Publish Module
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Validate Terraform
+        run: terraform validate
+
+      - name: Publish Module
+        env:
+          TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+        run: |
+          curl \
+            --header "Authorization: Bearer $TF_API_TOKEN" \
+            --request POST \
+            --data '{"data":{"type":"modules","attributes":{"vcs-repo":{"identifier":"<your-org>/<your-repo>","display-identifier":"<your-org>/<your-repo>"}}}}' \
+            https://app.terraform.io/api/v2/organizations/<your-org>/registry-modules
